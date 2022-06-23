@@ -11,7 +11,6 @@ install.packages("DBI") # Not sure if this is necessary, as it seems to be insid
 install.packages("devtools")
 devtools::install_github("massimoaria/openalexR")
 
-
 # Load the libraries:
 library(Matrix)
 library(dplyr)
@@ -60,7 +59,7 @@ df$IS <- NULL
 
 # [2] CREATE an SQLite database in memory. Put the dataframe into it as a table:
 temp.db <- dbConnect(RSQLite::SQLite(), ":memory:")
-dbWriteTable(temp.db, "oa_2020_UNB", df, append = TRUE)
+dbWriteTable(temp.db, "oa_2020_UNB", df, append = TRUE) # Change the name of the table as needed (e.g. year, university)
 # REPEAT STEPS 1 + 2 as necessary for each year.
 
 # A bit of database management:
@@ -68,16 +67,22 @@ dbWriteTable(temp.db, "oa_2020_UNB", df, append = TRUE)
 dbExecute(temp.db, "DROP VIEW myview")
 
 # [2.2] PARSE out the MAGid from the "id" field into a table "view":
-dbExecute(temp.db, "CREATE VIEW myview AS SELECT *, SUBSTR(id, 23, 10) AS MAGid FROM oa_2020_UNB")
+dbExecute(temp.db, "CREATE VIEW myview AS SELECT *, SUBSTR(id, 23, 10) AS MAGid FROM oa_2020_UNB") # Change the FROM table name as needed.
 
-# [2.3] Check to see that the MAGid has been parse in the correct format:
+# [2.3] Check to see that the MAGid has been parsed in the correct format:
 peekaboo <- dbGetQuery(temp.db, "SELECT * FROM myview LIMIT 10;")
 View(peekaboo)
 
 
-# [3] Retrieve the SmallTeams dataset for the correct years into  a temporary database:
-# The 'Small Teams' dataset should be in a table called "Disruptions", in a SQLite 
-# database called "Disruptiveness.db", located in the same directory as this file.
+# [3] Retrieve the 'Small Teams' dataset for the correct years into  a temporary database:
+# 
+# The dataset is at: "https://doi.org/10.7910/DVN/JPWNNK"
+#  - This dataset should be in a table called "Disruptions", in a SQLite database called "Disruptiveness.db", located in the same directory as this file.
+# 
+# Be sure to CITE the dataset and the research paper:
+#  - Lingfei Wu; Dashun Wang; James Evans, 2021, "Replication Data for: Large teams develop and small teams disrupt science and technology", https://doi.org/10.7910/DVN/JPWNNK, Harvard Dataverse, V1
+#  - Wu, L., Wang, D., & Evans, J. A. (2019). Large teams develop and small teams disrupt science and technology. Nature, 566(7744), 378-382.
+# 
 SmallTeams.db <- dbConnect(RSQLite::SQLite(), "Disruptiveness.db")
 ST_2020 <- dbGetQuery(SmallTeams.db, 'SELECT * FROM Disruptions WHERE Year = 2020')
 
